@@ -1,6 +1,7 @@
 "use client"
 import { signIn } from 'next-auth/react';
 import React, { useState } from 'react'
+import { Input } from '../ui/input';
 
 export default function LoginForm() {
     const [email, setEmail] = useState<string>("");
@@ -26,8 +27,9 @@ export default function LoginForm() {
     <div>
 
           <form onSubmit={handleSubmit}>
-              <input className='w-full bg-red-500' value={email} onChange={(e) => setEmail(e.target.value)} />
-              <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" />
+              <Input className='w-full bg-red-500' value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input value={password} onChange={(e) => setPassword(e.target.value)} type="password" />
+              <Input placeholder='password' value={password} onChange={(e) => setPassword(e.target.value)} type="password" />
               <button type="submit">Login</button>
           </form>
     </div>
