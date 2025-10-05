@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { Spinner } from "../ui/spinner"
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { signIn } from 'next-auth/react';
 
 export default function RegisterForm() {
     const [email, setEmail] = useState<string>("");
@@ -24,15 +25,78 @@ export default function RegisterForm() {
         const [passwordError, setPasswordError] = useState<string>("");
         const [name, setName] = useState<string>("");
         const [nameError, setNameError] = useState<string>("");
-        const [updloadedURL, setUploadURL] = useState<string>("");
+        const [uploadedURL, setUploadURL] = useState<string>("");
         const [uploading, setUploading] = useState<boolean>(false);
         const imageRef = useRef<HTMLInputElement>(null);
+        const [loading, setLoading] = useState<boolean>(false);
 
         // All handlers Functions 
 
     const handleSubmit: (e: React.FormEvent) => Promise<void> = async (e) => {
         e.preventDefault();
+        setLoading(true);
 
+        const form = e.target as HTMLFormElement; 
+        const formData = new FormData(form);
+        const name: string = formData.get("name") as string;
+        const email: string = formData.get("email") as string;
+        const password: string = formData.get("password") as string;
+        const image: string = uploadedURL;
+
+        console.log(name, email, password, image);
+        // Reset errors 
+        setNameError("");
+        setEmailError("");
+        setPasswordError("");
+
+        // Register user api call 
+        try {
+            // 1) create user in DB
+            const res = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password, image: uploadedURL }),
+            });
+            const data = await res.json();
+
+            console.log("The register response data is : ", data);
+
+            if (!res.ok) {
+                alert(data.error || "Registration failed");
+                setLoading(false);
+                return;
+            }
+            // 2) auto-login using NextAuth credentials provider
+            const signInResult = await signIn("credentials", {
+                redirect: false,
+                email,
+                password,
+            });
+
+            console.log("The sign in result is : ", signInResult);
+            
+            // signInResult structure (when redirect:false) often: { error?, ok?, status?, url? }
+            if ((signInResult as any )?.error) {
+                // rare: user created but login failed
+                toast("Registration succeeded but auto-login failed: " + (signInResult as any).error);
+                setLoading(false);
+                return;
+            }
+
+            // 3) success → redirect to protected page (server will now see session cookie)
+            // router.push("/dashboard");
+            toast("Registration and login successful", {
+                action: {
+                    label: "Close",
+                    onClick: () => toast.dismiss()
+                }
+            });
+            setLoading(false);
+            
+        } catch (error) {
+            console.log("The error is : ", error);
+            toast.error("Registration failed. Please try again.");
+        }
     }; 
 
     const handleNameOnChange: (e: React.ChangeEvent<HTMLInputElement>) => void = (e) => {
@@ -134,8 +198,8 @@ export default function RegisterForm() {
                           <div className="grid gap-2">
                               <Label htmlFor="email">Profile Photo</Label>
                               <Input id="picture" ref={imageRef} onChange={handleImageOnChange} type="file" />
-                              {uploading ? <span className='w-full flex justify-center items-center'><Spinner /></span> : updloadedURL && <figure className=''>
-                                  <Image src={updloadedURL} alt='Profile Photo' width={150} height={150} className='h-20 w-20 rounded-full ring-1 ring-primary shadow-lg duration-300 shadow-primary hover:shadow-xl mx-auto' />
+                              {uploading ? <span className='w-full flex justify-center items-center'><Spinner /></span> : uploadedURL && <figure className=''>
+                                  <Image src={uploadedURL} alt='Profile Photo' width={150} height={150} className='h-20 w-20 rounded-full ring-1 ring-primary shadow-lg duration-300 shadow-primary hover:shadow-xl mx-auto' />
                                 </figure>}
                           </div>
                           <div className="grid gap-2">

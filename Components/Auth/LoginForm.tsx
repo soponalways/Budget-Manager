@@ -22,7 +22,6 @@ export default function LoginForm() {
     const [emailError, setEmailError] = useState<string>("");
     const [passwordError, setPasswordError] = useState<string>("");
 
-    console.log(email, password); 
     // Email and password State validation handler 
     const handleEmailOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setEmailError("");
