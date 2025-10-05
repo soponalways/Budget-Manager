@@ -14,6 +14,7 @@ import {
 } from "../ui/card"
 import { Label } from "../ui/label"
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function LoginForm() {
     const [email, setEmail] = useState<string>("");
@@ -21,30 +22,34 @@ export default function LoginForm() {
     const [emailError, setEmailError] = useState<string>("");
     const [passwordError, setPasswordError] = useState<string>("");
 
-    console.log(email, password)
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        console.log("Form submitted with email: ", email, " and password: ", password); 
-
+    console.log(email, password); 
+    // Email and password State validation handler 
+    const handleEmailOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setEmailError("");
-        setPasswordError("");
-        if(!email) {
+        setEmail(e.target.value); 
+        if (!email) {
             setEmailError("Email is required");
             return;
         } else if (!/@/.test(email)) {
             setEmailError("Invalied email address, '@' is missing");
             return;
         }; 
-
-        if(!password) {
+    }; 
+    const handlePasswordOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPassword(e.target.value);
+        setPasswordError("");
+        if (!password && password.length === 0 ) {
             setPasswordError("Password is required");
             return;
         } else if (!/^(?=.*[a-z])(?=.*[A-Z]).{6,}$/.test(password)) {
             setPasswordError("Password must be at least 6 characters long and contain at least one uppercase and one lowercase letter");
             return;
         }
+
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
         const res = await signIn("credentials", {
             redirect: false,
@@ -53,11 +58,16 @@ export default function LoginForm() {
         });
         console.log("The sign in response is : ", res);
         if (res?.error) {
-            console.log(res.error)
-            alert(res.error);
+            toast("Login failed", {
+                description: res.error, 
+                action: {
+                    label: "Close",
+                    onClick: () => toast.dismiss(),
+                }
+            })
         } else {
             // router.push("/dashboard");
-            console.log("Login Successfully")
+            toast("Login Successfully"); 
         }
     }
     return (
@@ -83,7 +93,7 @@ export default function LoginForm() {
                                         type="email"
                                         name='email'
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        onChange={handleEmailOnChange}
                                         placeholder="mail@budgetmanager.com"
                                     />
                                     {emailError && <p className='text-sm text-red-500'>{emailError}</p>}
@@ -103,7 +113,7 @@ export default function LoginForm() {
                                         type="password"
                                         name='password'
                                         value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        onChange={handlePasswordOnChange}
                                     />
                                     {passwordError && <p className='text-sm text-red-500'>{passwordError}</p>}
                                 </div>
