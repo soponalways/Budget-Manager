@@ -24,10 +24,14 @@ export const authOptions: NextAuthOptions = {
                 if (!credentials?.email || !credentials?.password) return null;
 
                 const user = await prisma.user.findUnique({ where: { email: credentials.email } });
-                if (!user) return null;
+                if (!user) {
+                    throw new Error("No user found with the given email");
+                };
 
                 const valid = await bcrypt.compare(credentials.password, user.password || "");
-                if (!valid) return null;
+                if (!valid) {
+                    throw new Error("Incorrect password");
+                };
 
                 return {
                     id: user.id,
@@ -74,6 +78,11 @@ export const authOptions: NextAuthOptions = {
         },
     }, 
     secret: process.env.NEXTAUTH_SECRET,
+    pages: {
+        signIn: "/login", 
+        error: "/login",
+    }
 };
 
-export default NextAuth(authOptions)
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
