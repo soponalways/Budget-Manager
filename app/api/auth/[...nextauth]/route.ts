@@ -3,13 +3,13 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma} from "@/lib/prisma" 
 import bcrypt from "bcryptjs";
 
-interface credentials {
-    name: string;
-    credentials: {
-        email: { label: string; type: string };
-        password: { label: string; type: string };
-    };
-}
+// interface credentials {
+//     name: string;
+//     credentials: {
+//         email: { label: string; type: string };
+//         password: { label: string; type: string };
+//     };
+// }
 
 export const authOptions: NextAuthOptions = {
     providers: [
