@@ -18,6 +18,14 @@ import { toast } from 'sonner';
 import Image from 'next/image';
 import { signIn } from 'next-auth/react';
 
+
+interface SignInResult {
+    error?: string;
+    ok?: boolean;
+    status?: number;
+    url?: string;
+}
+
 export default function RegisterForm() {
     const [email, setEmail] = useState<string>("");
         const [password, setPassword] = useState<string>("");
@@ -76,9 +84,9 @@ export default function RegisterForm() {
             console.log("The sign in result is : ", signInResult);
             
             // signInResult structure (when redirect:false) often: { error?, ok?, status?, url? }
-            if ((signInResult as any )?.error) {
+            if ((signInResult as SignInResult )?.error) {
                 // rare: user created but login failed
-                toast("Registration succeeded but auto-login failed: " + (signInResult as any).error);
+                toast("Registration succeeded but auto-login failed: " + (signInResult as SignInResult).error);
                 setLoading(false);
                 return;
             }
@@ -119,8 +127,15 @@ export default function RegisterForm() {
                     onClick: () => toast.dismiss()
                 }
             });
-            imageRef.current.value = "";
+            if(imageRef.current) {
+                imageRef.current.value = "";
+            }
             return; 
+        }; 
+
+        if(!image) {
+            toast.error("Please select an image file"); 
+            return;
         }
 
         const imageFormData = new FormData(); 
@@ -139,6 +154,7 @@ export default function RegisterForm() {
                 setUploading(prev => !prev); 
             }
         } catch (error) {
+            console.log("The image upload error is: ", error)
             toast.error("Image upload failed. Please try again."); 
         }
     }
@@ -228,8 +244,8 @@ export default function RegisterForm() {
                               {passwordError && <p className='text-sm text-red-500'>{passwordError}</p>}
                           </div>
                       </div>
-                      <Button type="submit" className="w-full cursor-pointer mt-2">
-                          Login
+                      <Button type="submit" disabled={loading} className="w-full cursor-pointer mt-2">
+                            {loading ? <Spinner /> : "Create Account"}
                       </Button>
                   </form>
               </CardContent>
