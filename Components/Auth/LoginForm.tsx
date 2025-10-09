@@ -55,7 +55,7 @@ export default function LoginForm() {
             email,
             password,
         });
-        console.log("The sign in response is : ", res);
+        // console.log("The sign in response is : ", res);
         if (res?.error) {
             toast("Login failed", {
                 description: res.error, 
@@ -79,7 +79,7 @@ export default function LoginForm() {
                             Enter your email below to login to your account
                         </CardDescription>
                         <CardAction>
-                            <Button variant="link" className='cursor-pointer'>Sign Up</Button>
+                            <Link href={'/register'}><Button variant="link" className='cursor-pointer'>Sign Up</Button></Link>
                         </CardAction>
                     </CardHeader>
                     <CardContent>

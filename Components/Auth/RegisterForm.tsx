@@ -18,14 +18,6 @@ import { toast } from 'sonner';
 import Image from 'next/image';
 import { signIn } from 'next-auth/react';
 
-
-interface SignInResult {
-    error?: string;
-    ok?: boolean;
-    status?: number;
-    url?: string;
-}
-
 export default function RegisterForm() {
     const [email, setEmail] = useState<string>("");
         const [password, setPassword] = useState<string>("");
@@ -40,7 +32,7 @@ export default function RegisterForm() {
 
         // All handlers Functions 
 
-    const handleSubmit: (e: React.FormEvent) => Promise<void> = async (e) => {
+    const handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void> = async (e) => {
         e.preventDefault();
         setLoading(true);
 
@@ -51,7 +43,6 @@ export default function RegisterForm() {
         const password: string = formData.get("password") as string;
         const image: string = uploadedURL;
 
-        console.log(name, email, password, image);
         // Reset errors 
         setNameError("");
         setEmailError("");
@@ -63,11 +54,9 @@ export default function RegisterForm() {
             const res = await fetch("/api/auth/register", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, password, image: uploadedURL }),
+                body: JSON.stringify({ name, email, password, image }),
             });
             const data = await res.json();
-
-            console.log("The register response data is : ", data);
 
             if (!res.ok) {
                 alert(data.error || "Registration failed");
@@ -75,32 +64,33 @@ export default function RegisterForm() {
                 return;
             }
             // 2) auto-login using NextAuth credentials provider
-            const signInResult = await signIn("credentials", {
-                redirect: false,
-                email,
-                password,
-            });
+            const autoLogin = async (): Promise<void> => {
+                const signInResult = await signIn("credentials", {
+                    redirect: false,
+                    email,
+                    password,
+                });
 
-            console.log("The sign in result is : ", signInResult);
-            
-            // signInResult structure (when redirect:false) often: { error?, ok?, status?, url? }
-            if ((signInResult as SignInResult )?.error) {
-                // rare: user created but login failed
-                toast("Registration succeeded but auto-login failed: " + (signInResult as SignInResult).error);
-                setLoading(false);
-                return;
-            }
-
-            // 3) success → redirect to protected page (server will now see session cookie)
-            // router.push("/dashboard");
-            toast("Registration and login successful", {
-                action: {
-                    label: "Close",
-                    onClick: () => toast.dismiss()
+                // signInResult structure (when redirect:false) often: { error?, ok?, status?, url? }
+                if ((signInResult)?.error) {
+                    // rare: user created but login failed
+                    toast("Registration succeeded but auto-login failed: " + (signInResult).error);
+                    setLoading(false);
+                    return;
                 }
-            });
-            setLoading(false);
-            
+
+                // 3) success → redirect to protected page (server will now see session cookie)
+                // router.push("/dashboard");
+                toast("Registration and login successful", {
+                    action: {
+                        label: "Close",
+                        onClick: () => toast.dismiss()
+                    }
+                });
+                setLoading(false);
+            }; 
+            await autoLogin(); 
+
         } catch (error) {
             console.log("The error is : ", error);
             toast.error("Registration failed. Please try again.");
